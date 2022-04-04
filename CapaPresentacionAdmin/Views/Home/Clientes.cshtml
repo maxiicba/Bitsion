@@ -1,0 +1,452 @@
+﻿
+@{
+    ViewBag.Title = "Clientes";
+    ViewBag.Clientes = "active"; //Colocar para que el texto al seleccionar quede activado
+    ViewBag.Index = "";
+    ViewBag.desc = "Esta es la lista de todos los clientes, puedes agregar, editar y borrar clientes."; //Descripcion de la pagina
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Todos los clientes</h6>
+        </div>
+        <div class="card-body">
+            <a href="#" class="btn btn-success mb-3" onclick="abrirModal()">
+                <span class="icon text-white-50">
+                    <i class="fas fa-check"></i>
+                </span>
+                <span class="text">Crear Cliente</span>
+            </a>
+            <div class="table-responsive">
+                <table class="table table-bordered" id="tabla_Cientes" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Identificacion</th>
+                            <th>Edad</th>
+                            <th>Genero</th>
+                            <th>Atributo</th>
+                            <th>Informacion Adicional</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+@*MODAL*@
+<div class="modal fade" id="FormModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="exampleModalLabel">Cientes</h5>
+                <a href="#" class="btn btn-primary btn-circle btn-sm" data-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </a>           
+            </div>
+            <div class="modal-body">
+                <div class="row g-1">
+                    <input id="txtId" value="0" type="hidden" />
+                    <div class="col-sm-6 mt-1">
+                        <label>Nombre Completo</label>
+                        <input type="text" class="form-control" id="txtNombre" autocomplete="off">
+                    </div>
+                    <div class="col-sm-6 mt-1">
+                        <label>Identificacion</label>
+                        <input type="text" class="form-control" id="txtIdentificacion" autocomplete="off">
+                    </div>
+                    <div class="col-sm-6 mt-1">
+                        <label>Edad</label>
+                        <input type="text" class="form-control" id="txtEdad" autocomplete="off">
+                    </div>
+                    <div class="col-sm-6 mt-1">
+                        <label>Genero</label>
+                        <select class="form-control" id="generoValor">
+                            <option value="1">Masculino</option>
+                            <option value="0">Femenino</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-6 mt-1">
+                        <label class="form-label">Información Adicional</label>
+                        <textarea type="text" class="form-control" id="txtInfo" name="Info" style="height:125px;resize:none"></textarea>
+                    </div>
+                    <div class="col-sm-6 mt-1">
+                        <label>Activo</label>
+                        <select class="form-control" id="activoValor">
+                            <option value="1">Si</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                </div>
+                <hr />
+                <div class="card mt-2">
+                    <a href="#collapseCardExample" class="d-block card-header py-3" data-toggle="collapse"
+                       role="button" aria-expanded="true" aria-controls="collapseCardExample">
+                        <h6 class="m-0 font-weight-bold text-primary">Atributos</h6>
+                    </a>           
+                    <div class="collapse show col-sm-12" id="collapseCardExample">
+                        <div class="card-body" id="test">
+                            <label class="form-label ml-2">Los atributos seleccionados figuran a la izquierda:</label>
+                            <select class="custom-select col-sm-5 ml-3" size="5" aria-label="size 3 select example" id="atrSeleccionar">
+                            </select>
+                            <select class="custom-select col-sm-5" size="5" aria-label="size 3 select example" id="atrSeleccionado">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                @*MENSAJE DE ALERTA!*@
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div id="mensajeError" class="alert alert-danger" role="alert">
+                            Error
+                        </div>
+                    </div>
+                </div>
+            </div>
+                <div class="modal-footer mt-auto">
+                    <button type="button" class="btn btn-success" onClick="Guardar()">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+
+                </div>
+            </div>
+    </div>
+</div>
+
+
+@section scripts{
+<script>
+            /*Variables globales*/
+            var tabladata;
+            var filaSeleccionada;
+            var seleccionarA = []; //Array de los atributos a seleccionar
+            var seleccionadoA = []; //Array de los atributos seleccionados
+
+            $(document).ready(function () {
+                tabladata = $("#tabla_Cientes").DataTable({
+                responsive: true,
+                ordering: false,
+                "ajax": {
+                    url: '@Url.Action("ListarClientes", "Home")',
+                    type: "GET",
+                    dataType: "json"
+            },
+                /*ASIGNAR DATOS A LA LISTA DEBE COINCIDIR CON LAS COLUMNAS YA CREADAS*/
+                "columns": [
+                    { "data":"Nombre"},
+                    { "data": "Identificacion" },
+                    { "data": "Edad" },
+                    {
+                        "data": "Genero", "render": function (valor) {
+                            if (valor) {
+                                return '<span class="badge badge-primary">Hombre</span>'
+                            } else {
+                                return '<span class="badge badge-info">Mujer</span>'
+                            }
+                        }
+                    },
+                    {
+                        "data": "oAtributos", "render": function (valor) {
+                            var resultado = valor.replace(/[.*+?"^${}()|[\]\\]/g, ''); //Sacamos los corchetes para que se vea mejor
+                            var re = '<span href="#" class="badge badge-warning">' + resultado +'</span>' //Creamos span
+                            return re
+                        }
+                    },
+                    { "data": "InfoAdicional" },
+                    {
+                        "data": "Estado", "render": function (valor)
+                        {
+                            if (valor) {
+                                return '<span href="#" class="badge badge-success">Activo</span>'
+                            } else {
+                                return '<span href="#" class="badge badge-danger">Inactivo</span>'
+                            }
+                        }
+                    },
+                    {
+                        /*CREAR BOTONES DE EDITAR Y BORRAR*/
+                        "defaultContent": '<button type="button" class="btn btn-primary btn-sm btn-editar"><i class="fas fa-pen"></i></button>' + " " +
+                            '<button type="button" class="btn btn-danger btn-sm ms-2 btn-eliminar"><i class="fas fa-trash"></i></button>',
+                        "orderable": false,
+                        "searchable": false,
+                        "width": "90px"
+                    },
+                ],
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+                }
+            });
+            });
+
+            //Cargar atributos a seleccionar al abrir el modal
+            function listarAtributos() {
+                jQuery.ajax({
+                    url: '@Url.Action("ListarAtributos", "Mantenedor")',
+                    type: "GET",
+                    data: null,
+                    dataType: "json",
+                    contentType: "application/json; charset=utf8",
+                    success: function (data) {
+                        $.each(data.data, function (index, valor) {
+                            seleccionarA.unshift(valor.Nombre); //Agregamos los atributos al array
+                            $("<option>").attr({ "value": valor.IdAtributo }).text(valor.Nombre).appendTo("#atrSeleccionar") //Agregamos los atributos a la lista a seleccionar
+                        })
+                    },
+                });
+            }
+
+            //Cargamos los atriburos que ya tiene el cliente
+            function listarAtributosPuestos(id1) {
+                jQuery.ajax({
+                    url: '@Url.Action("ListarAtri", "Home")',
+                    type: "POST",
+                    data: JSON.stringify({ id: id1 }),
+                    dataType: "json",
+                    contentType: "application/json; charset=utf8",
+                    success: function (data) {
+                        var te = data.data;
+                        var resultado = te.replace(/[.*+?"^${}()|[\]\\]/g, '');
+                        seleccionadoA = resultado.split(','); //Cargamos atributos al array seleccionados
+                        for (var i = 0; i < seleccionadoA.length; i++) {
+                            $("<option>").attr({ "value": i }).text(seleccionadoA[i]).appendTo("#atrSeleccionado")
+                        }
+                    },
+                });
+            }
+
+            
+            function abrirModal(json) {
+                //Colocamos los valores por default
+                $("#txtId").val(0)
+                $("#txtNombre").val("")
+                $("#txtIdentificacion").val("")
+                $("#txtEdad").val("")
+                $("#generoValor").val(1)
+                $("#activoValor").val(1)
+                $("#txtInfo").val("")
+                $("#mensajeError").hide();
+                $("#atrSeleccionado").empty(); //Vaciamos los select
+                $("#atrSeleccionar").empty(); //Vaciamos los select
+                listarAtributos();//Volvemos a cargar los atributos
+
+                //Vaciamos los arrays
+                for (let i = seleccionadoA.length; i > 0; i--) {
+                    seleccionadoA.pop();
+                } for (let i = seleccionarA.length; i > 0; i--) {
+                    seleccionarA.pop();
+                }
+                //===================
+
+                /*AL ABRIR EL MODAL PARA EDITAR QUE LE CARGUE LOS DATOS*/
+                if (json != null) {
+                    $("#txtId").val(json.IdCliente)
+                    $("#txtNombre").val(json.Nombre)
+                    $("#txtIdentificacion").val(json.Identificacion)
+                    $("#txtEdad").val(json.Edad)
+                    $("#generoValor").val(json.Genero == true ? 1 : 0)
+                    $("#activoValor").val(json.Estado == true ? 1 : 0)
+                    $("#txtInfo").val(json.InfoAdicional)
+                    listarAtributosPuestos(json.IdCliente)
+                }
+
+                /*ABRIR MODAL SOLO CON BOTON CREAR*/
+                $("#FormModal").modal("show");
+            }
+
+            // CUANDO PRECIONA EN SELECCIONAR
+            $("#atrSeleccionar").change(function () { cambiar(); });
+            function cambiar() {
+                var array = [];
+                var nombre;
+                var value;
+                //Obtenemos los datos del atributo seleccioando
+                $("#atrSeleccionar :selected").each(function () {
+                    array[$(this).val()] = (parseInt($(this).val()));
+                    nombre = $(this).text();
+                    value = $(this).val();
+                });
+
+                for (i = 0; i < array.length; i++) {
+                    if (array[i] != undefined || array[i] != array[i]) {
+                        if (seleccionadoA.find(element => element == nombre.toString())) { //Buscamos si esta seleccionado
+                            $("#atrSeleccionar option[value=" + array[i] + "]").hide(); //Borramos ya que ya esta en la otra lista
+                            sacarItemArr(seleccionarA, nombre.toString());//Borramos ya que ya esta en la otra lista
+                            return
+                        }
+
+                        $("#atrSeleccionar option[value=" + array[i] + "]").hide(); //Sacar de la lista seleccionar
+                        seleccionadoA.unshift(nombre.toString()); // Poner en array seleccionado seleccionado
+                        //Sacamos el atributo del array
+                        for (var i = 0; i < seleccionarA.length; i++) {
+                            if (seleccionarA[i] === nombre.toString()) {
+                                seleccionarA.splice(i, 1);
+                                i--;
+                            }
+                        }
+                        $("<option>").attr({ "value": value }).text(nombre.toString()).appendTo("#atrSeleccionado") // Se pone en lista seleccionar
+                    }
+                }
+            }
+            function sacarItemArr(arr, item) {
+                var i = arr.indexOf(item);
+                arr.splice(i, 1);
+            }
+            // CUANDO PRECIONA EN SELECCIOANDO
+            $("#atrSeleccionado").change(function () { cambiarSeleccionado(); });
+            function cambiarSeleccionado() {
+                var array = [];
+                var nombre;
+                var value;
+                $("#atrSeleccionado :selected").each(function () {
+                    array[$(this).val()] = (parseInt($(this).val()));
+                    nombre = $(this).text();
+                    value = $(this).val();
+                });
+                for (i = 0; i < array.length; i++) {
+                    if (array[i] != undefined || array[i] != array[i]) {
+                        if (array[i] != undefined || array[i] != array[i]) {
+
+
+                            if (seleccionarA.find(element => element == nombre.toString())) {
+                                $("#atrSeleccionado option[value=" + array[i] + "]").hide();
+                                sacarItemArr(seleccionadoA, nombre.toString());
+                                return
+                            }
+                            $("#atrSeleccionado option[value=" + array[i] + "]").hide(); //Sacar de la lista seleccionado
+                            seleccionarA.unshift(nombre.toString()); // Poner en array seleccionar
+
+                            for (var i = 0; i < seleccionadoA.length; i++) {
+                                if (seleccionadoA[i] === nombre.toString()) {
+                                    seleccionadoA.splice(i, 1);
+                                    i--;
+                                }
+                            }
+                            $("<option>").attr({ "value": value }).text(nombre.toString()).appendTo("#atrSeleccionar") // Se pone en lista seleccionar
+                        }
+                    }
+                }
+            }
+
+            /*DETECTAR CANDO PRESIONA BOTON EDITAR*/
+            $("#tabla_Cientes tbody").on("click", '.btn-editar', function () {
+                filaSeleccionada = $(this).closest("tr");
+                var data = tabladata.row(filaSeleccionada).data();
+                abrirModal(data); //Le enviamos al modal los datos de la tabla
+
+            })
+
+            /*DETECTAR CANDO PRESIONA BOTON BORRAR*/
+            $("#tabla_Cientes tbody").on("click", '.btn-eliminar', function () {
+                var usuarioSeleccionado = $(this).closest("tr");
+                var data = tabladata.row(usuarioSeleccionado).data();
+                Swal.fire({
+                      title: '¿Estás Seguro?',
+                      text: "No podrás revertir esta acción!",
+                      icon: 'warning',
+                      showCancelButton: true,
+                      confirmButtonColor: '#3085d6',
+                      cancelButtonColor: '#d33',
+                      confirmButtonText: 'Si, eliminar!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                          jQuery.ajax({
+                             url: '@Url.Action("EliminarCliente", "Home")',
+                             type: "POST",
+                             data: JSON.stringify({ id: data.IdCliente }),
+                             dataType: "json",
+                             contentType: "application/json; charset=utf8",
+                            success: function (data) {
+
+                                if (data.resultado) {
+                                    Swal.fire(
+                                        'Eliminado!',
+                                        'El cliente fue eliminado',
+                                        'success'
+                                    )
+                                    tabladata.row(usuarioSeleccionado).remove().draw();
+                                } else {
+                                    swal("No se pudo eliminar", data.mensaje, "error");
+                                }
+                             },
+                            error: function (error) {
+                                console.log(error)
+                             },
+                         });
+                      }
+                     })
+            })
+
+
+            function Guardar() {
+                var Clientes = {
+                    IdCliente: $("#txtId").val(),
+                    Nombre: $("#txtNombre").val(),
+                    Identificacion: $("#txtIdentificacion").val(),
+                    Edad: $("#txtEdad").val(),
+                    InfoAdicional: $("#txtInfo").val(),
+                    oAtributos: JSON.stringify(seleccionadoA),
+                    Genero: $("#generoValor").val() == 1 ? true : false, /*si es igual a 1 que devuelva true si no false*/
+                    Estado: $("#activoValor").val() == 1 ? true : false,
+
+                }
+                 jQuery.ajax({
+                     url: '@Url.Action("GuardarCliente", "Home")',
+                     type: "POST",
+                     data: JSON.stringify({ objeto: Clientes}),
+                     dataType: "json",
+                     contentType: "application/json; charset=utf8",
+                     success: function (data) {
+
+                         //CLIENTE NUEVO
+                         $(".modal-body").LoadingOverlay("hide");
+                         if (Clientes.IdCliente == 0) {
+                             if (data.resultado != 0) {
+                                 Clientes.IdCliente = data.resultado;
+                                 $("#FormModal").modal("hide");
+                                 tabladata.row.add(Clientes).draw(false);
+                             }
+                             else {
+                                 $("#mensajeError").text(data.mensaje)
+                                 $("#mensajeError").show();
+                             }
+                         }
+                         else
+                         {
+                             /*ESITAR CLIENTE*/
+                             if (data.resultado) {
+                                 tabladata.row(filaSeleccionada).data(Clientes).draw(false);
+                                 filaSeleccionada = null;
+                                 $("#FormModal").modal("hide");
+                             }
+                             else {
+                                 $("#mensajeError").text(data.mensaje)
+                                 $("#mensajeError").show();
+                             }
+                         }
+                     },
+                     error: function (error) {
+                         $(".modal-body").LoadingOverlay("hide");
+                         $("#mensajeError").text("Error Ajax")
+                         $("#mensajeError").show();
+                     },
+                     beforeSend: function() {
+                         $(".modal-body").LoadingOverlay("show", {
+                             imageResizeFactor: 2,
+                             text: "Cargando...",
+                             size: 18
+                         });
+                     },
+                 })
+            };
+</script>
+}

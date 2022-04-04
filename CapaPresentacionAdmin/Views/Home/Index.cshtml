@@ -1,0 +1,84 @@
+﻿@{
+    ViewBag.Title = "Pagina principal";
+    ViewBag.Index = "active";
+}
+<div class=" col-8 mb-4">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Nuestra Misión</h6>
+        </div>
+        <div class="card-body">
+            <p>
+                Creemos en la unión como la energía
+                que mueve al mundo hacia adelante.
+                Por eso elegimos avanzar juntos.
+                Haciendo que
+            </p>
+            <div class="text-left">
+                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;"
+                     src="https://www.bitsion.com/bitsion/assets/img/logos/logo_nuestramision.png" alt="">
+            </div>
+            <p>
+                nos una.
+            </p>
+            <a target="_blank" rel="nofollow" href="https://www.bitsion.com/bitsion/#/cultura">
+                Más informacion en Bitsion.com &rarr;
+            </a>
+        </div>
+    </div>
+</div>
+<div class="row align-items-end col-12">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total de clientes
+                        </div>
+                        <div id="totalclientes" class="h5 mb-0 font-weight-bold text-gray-800">0</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total de atributos
+                        </div>
+                        <div id="totalatributos" class="h5 mb-0 font-weight-bold text-gray-800">0</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-book fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+<script>
+    //Cargar datos del dashboard
+    jQuery.ajax({
+        url: '@Url.Action("VistaDashboard", "Home")',
+        type: "GET",
+        dataType: "json",
+        contentType: "application/json; charset=utf8",
+        success: function (data) {
+    
+            var objeto = data.resultado;
+            $("#totalclientes").text(objeto.TotalClientes),
+            $("#totalatributos").text(objeto.TotalAtributos)
+        },
+    });
+</script>
+}
